@@ -166,7 +166,7 @@
 				} else {
 					// Setting the "data-v-" attribute manually is not ideal as
 					// this could change in the future but it'll do for now.
-					attrName = 'data-v-7a1f9df8';
+					attrName = 'data-v-295f1f06';
 
 					const extLinksEl = anilist.helpers.createElement('div', {
 						[attrName]: '',
@@ -186,10 +186,27 @@
 				const malLink = anilist.helpers.createElement('a', {
 					[attrName]: '',
 					class: 'external-link MyAnimeList',
+					href: `https://myanimelist.net/${isAnime ? 'anime' : 'manga'}/${malID}/`,
 					target: '_blank',
-					href: `https://myanimelist.net/${isAnime ? 'anime' : 'manga'}/${malID}/`
+					style: '--link-color: #25407d;'
 				});
-				malLink.innerText = 'MyAnimeList';
+
+				// Add the MAL Icon
+				const iconWrap = anilist.helpers.createElement('div', {
+					[attrName]: '',
+					class: 'icon-wrap'
+				},{
+					'background-image': 'url(https://cdn.myanimelist.net/images/favicon.ico)',
+					'background-size': 'contain'
+				});
+				malLink.append(iconWrap);
+
+				const name = anilist.helpers.createElement('span', {
+					[attrName]: '',
+					class: 'name'
+				});
+				malLink.append(name);
+				name.innerText = 'MyAnimeList';
 
 				extLinksWrapEl.append(malLink);
 			},
