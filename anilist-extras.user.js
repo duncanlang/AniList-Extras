@@ -385,23 +385,27 @@
 					$('.characters .link').innerText = '';
 					const characterLabel = anilist.helpers.createElement('span', { class: 'character-header' });
 					characterLabel.innerText = 'AniList Characters';
+					
+					const malCharacterLabel = anilist.helpers.createElement('span', { class: 'character-header-mal' }, { display: 'none' });
+					malCharacterLabel.innerText = 'MAL Characters';
 
 					const characterToggle = anilist.helpers.createElement('span', { class: 'toggle' });
 
-					$('.characters .link').append(characterLabel, characterToggle);
+					$('.characters .link').append(characterLabel, malCharacterLabel, characterToggle);
 
 					$('.characters .link .toggle').addEventListener('click', event => {
 						if ($('.characters').classList.contains('mal')) {
 							$('.characters').classList.remove('mal');
 							$('.characters .toggle').innerText = 'Switch to MyAnimeList';
-							$('.characters .character-header').style.display = 'none';
+							$('.characters .character-header').style.display = 'inline';
+							$('.characters .character-header-mal').style.display = 'none';
 							$('.characters .link').style.display = 'inline';
 							anilist.storage.set('activeCharacters', 'anilist');
 						} else {
 							$('.characters').classList.add('mal');
 							$('.characters .toggle').innerText = 'Switch to AniList';
-							$('.characters .character-header').style.display = 'inline';
-							$('.characters .link').style.display = 'none';
+							$('.characters .character-header').style.display = 'none';
+							$('.characters .character-header-mal').style.display = 'inline';
 							anilist.storage.set('activeCharacters', 'mal');
 						}
 
@@ -410,13 +414,11 @@
 
 					if (anilist.storage.get('activeCharacters') === 'anilist') {
 						$('.characters .toggle').innerText = 'Switch to MyAnimeList';
-						$('.characters .character-header').style.display = 'none';
-						$('.characters .link').style.display = 'inline';
 					} else {
 						$('.characters').classList.add('mal');
 						$('.characters .toggle').innerText = 'Switch to AniList';
-						$('.characters .character-header').style.display = 'inline';
-						$('.characters .link').style.display = 'none';
+						$('.characters .character-header').style.display = 'none';
+						$('.characters .character-header-mal').style.display = 'inline';
 					}
 				} catch (err) {
 					console.error(err);
