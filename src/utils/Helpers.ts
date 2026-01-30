@@ -239,14 +239,12 @@ export const validateJSONSerializable = (value: any): boolean => {
  * Parse the headers from a headers response string.
  */
 const parseResponseHeaders = (headersString: string) => {
-	// const headers: Record<string, string> = {};
 	const headers = new Headers();
 	const headerLines = headersString.trim().trim().split(/[\n\r]+/);
 
 	for (const line of headerLines) {
-		const [name, value] = line.split(': ', 2);
-		// headers[name.trim()] = value ? value.trim() : '';
-		headers.set(name.trim(), value ? value.trim() : '');
+		const [name, value] = line.split(':', 2);
+		headers.set(name.trim(), value?.trim() ?? '');
 	}
 
 	return headers;
