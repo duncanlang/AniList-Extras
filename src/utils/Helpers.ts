@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 import Cache from './Cache';
 import Storage from './Storage';
+import RateLimit from './RateLimit';
 import { ONE_HOUR, ONE_DAY, ONE_WEEK } from './Constants';
 import type * as CSS from 'csstype';
 
@@ -351,10 +352,12 @@ export const anilistApi = async (
 	}
 };
 
+const malApiRateLimit = new RateLimit(3, 2000);
+
 /**
  * Send a request to the Jikan API. Returns cached data if available.
  */
-export const malApi = async (path: string, cacheTime: number | false = ONE_HOUR) => {
+export const malApi = async (path: string, cacheTime: number | false = ONE_HOUR): Promise<any> => {
 	if (cacheTime !== false) {
 		const cachedItem = await Cache.get('mal-api-response', path);
 
@@ -363,22 +366,44 @@ export const malApi = async (path: string, cacheTime: number | false = ONE_HOUR)
 		}
 	}
 
-	const response = await request(`https://api.jikan.moe/v4/${path}`);
+	const maxRetries = 3;
 
-	if (response.status !== 200) {
-		throw new Error('Failed to fetch data.');
-	}
+	const performRequest = async (attempt: number = 0): Promise<any> => {
+		const response = await request(`https://api.jikan.moe/v4/${path}`);
 
-	if (response.json.error) {
-		console.error(response.json);
-		throw new Error(response.json.error);
-	}
+		if (response.status === 429) {
+			if (attempt < maxRetries) {
+				const delay = 1000 * 2**attempt;
+				await sleep(delay);
+				return performRequest(attempt + 1);
+			} else {
+				throw new Error(`429 Too Many Requests after ${maxRetries} tries.`);
+			}
+		}
 
-	if (cacheTime !== false) {
-		await Cache.set('mal-api-response', path, response.json, cacheTime);
-	}
+		if (response.status !== 200) {
+			const errorMsg = response.json?.error || `Status ${response.status}`;
+			throw new Error(`Failed to fetch data: ${errorMsg}`);
+		}
 
-	return response.json;
+		return response.json;
+	};
+
+	return new Promise((resolve, reject) => {
+		malApiRateLimit.push(async () => {
+			try {
+				const data = await performRequest();
+
+				if (cacheTime !== false && data) {
+					await Cache.set('mal-api-response', path, data, cacheTime);
+				}
+
+				resolve(data);
+			} catch (error) {
+				reject(error);
+			}
+		});
+	});
 };
 
 /**
