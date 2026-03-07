@@ -181,7 +181,7 @@ async function buildAll() {
 
 // Watch for changes and rebuild
 if (watchFlag) {
-	chokidar.watch('src/**/*', {
+	chokidar.watch('src/', {
 		ignoreInitial: true,
 	})
 		.on('add', () => void buildAll())
