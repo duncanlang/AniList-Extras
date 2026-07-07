@@ -37,7 +37,7 @@ registerModule.anilist({
 		} else {
 			// Setting the "data-v-" attribute manually is not ideal as
 			// this could change in the future but it'll do for now.
-			attrName = 'data-v-c1b7ee7c';
+			attrName = 'data-v-fd082f80';
 
 			createElement('div', {
 				attributes: {
