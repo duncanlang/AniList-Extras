@@ -23,12 +23,34 @@ export default class RateLimit {
 	}
 
 	/**
-	 * Adds a callback to the queue and triggers queue processing.
+	 * Queues a callback and returns a promise that settles with its result.
+	 * The caller's stack is snapshotted synchronously and attached as the
+	 * error's `cause`, so queue-side failures point back at the real call site.
 	 */
-	public push(callback: () => Promise<void> | void): void {
+	public async push<T>(callback: () => Promise<T> | T): Promise<T> {
+		// eslint-disable-next-line unicorn/error-message
+		const callSite = new Error();
+		callSite.name = 'Queued callback';
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		Error.captureStackTrace?.(callSite, this.push);
+		const isV8Stack = /\n\s+at\s/.test(callSite.stack ?? '');
+
 		console.log('RateLimit: Pushing new callback to queue. Tokens available:', this.tokens);
-		this.queue.push(callback);
-		void this.processQueue();
+
+		return new Promise<T>((resolve, reject) => {
+			this.queue.push(async () => {
+				try {
+					resolve(await callback());
+				} catch (error) {
+					if (isV8Stack && error instanceof Error && error.cause === undefined) {
+						error.cause = callSite;
+					}
+
+					reject(error);
+				}
+			});
+			void this.processQueue();
+		});
 	}
 
 	/**

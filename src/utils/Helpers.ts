@@ -377,32 +377,25 @@ export const malApi = async (path: string, cacheTime: number | false = ONE_HOUR)
 				await sleep(delay);
 				return performRequest(attempt + 1);
 			} else {
-				throw new Error(`429 Too Many Requests after ${maxRetries} tries.`);
+				throw new Error(`429 Too Many Requests for malApi request "${path}" after ${maxRetries} tries.`);
 			}
 		}
 
 		if (response.status !== 200) {
 			const errorMsg = response.json?.error || `Status ${response.status}`;
-			throw new Error(`Failed to fetch data: ${errorMsg}`);
+			throw new Error(`Failed to fetch data for malApi request "${path}": ${errorMsg}`);
 		}
 
 		return response.json;
 	};
 
-	return new Promise((resolve, reject) => {
-		malApiRateLimit.push(async () => {
-			try {
-				const data = await performRequest();
+	return malApiRateLimit.push(async () => {
+		const data = await performRequest();
+		if (cacheTime !== false && data) {
+			await Cache.set('mal-api-response', path, data, cacheTime);
+		}
 
-				if (cacheTime !== false && data) {
-					await Cache.set('mal-api-response', path, data, cacheTime);
-				}
-
-				resolve(data);
-			} catch (error) {
-				reject(error);
-			}
-		});
+		return data;
 	});
 };
 
